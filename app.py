@@ -26,12 +26,15 @@ def create_email_display_form():
 # Used in the accompanying web app
 @app.route('/update_form', methods=['POST'])
 def create_email_edit_form():
+    id = request.form.get('id')
     title = request.form.get('title')
     from_email = request.form.get('from_email')
     to_email = request.form.get('to_email')
     email_message = request.form.get('email_message')
 
-    return render_template('update.html', title=title,
+    return render_template('update.html',
+                           id=id,
+                           title=title,
                            from_email=from_email,
                            to_email=to_email,
                            email_message=email_message)
@@ -40,13 +43,15 @@ def create_email_edit_form():
 # Used in the accompanying web app
 @app.route('/v1.0/emails/update', methods=['POST'])
 def update_email():
-    old_title = request.form.get('title_old')
-    new_title = request.form.get('title_new')
+    old_id = request.form.get('id_old')
+    new_id = request.form.get('id_new')
+    title = request.form.get('title')
     from_email = request.form.get('from_email')
     to_email = request.form.get('to_email')
     email_message = request.form.get('email_message')
-    email = EmailData.query.filter_by(title=old_title).first()
-    email.title = new_title
+    email = EmailData.query.filter_by(id=old_id).first()
+    email.id = new_id
+    email.title = title
     email.from_email = from_email
     email.to_email = to_email
     email.email_message = email_message
@@ -72,8 +77,8 @@ def create_email():
 # Used in the accompanying web app
 @app.route("/v1.0/emails/delete", methods=['POST'])
 def delete():
-    title = request.form.get("title")
-    email = EmailData.query.filter_by(title=title).first()
+    id = request.form.get("id")
+    email = EmailData.query.filter_by(id=id).first()
     db.session.delete(email)
     db.session.commit()
     return redirect("/")

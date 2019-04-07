@@ -12,6 +12,7 @@
   <table class="table table-striped">
   <thead>
   <tr>
+      <th>Id</th>
       <th>Title</th>
       <th>From</th>
       <th>To</th>
@@ -21,12 +22,14 @@
   <tbody>
   {% for email in emails %}
     <tr>
+        <td>{{ email.id }}</td>
         <td>{{ email.title }}</td>
         <td>{{ email.from_email }}</td>
         <td>{{ email.to_email }}</td>
         <td>{{ email.email_message }}</td>
         <td>
             <form method="POST" action="/update_form" style="display: inline">
+                <input type="hidden" value="{{email.id}}" name="id">
                 <input type="hidden" value="{{email.title}}" name="title">
                 <input type="hidden" value="{{email.from_email}}" name="from_email">
                 <input type="hidden" value="{{email.to_email}}" name="to_email">
@@ -36,7 +39,7 @@
         </td>
         <td>
             <form method="POST" action="/v1.0/emails/delete" style="display: inline">
-                <input type="hidden" value="{{email.title}}" name="title">
+                <input type="hidden" value="{{email.id}}" name="id">
                 <input type="submit" value="Delete">
             </form>
         </td>

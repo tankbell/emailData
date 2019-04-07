@@ -7,9 +7,13 @@
   <h4>Update Email</h4>
   <form action="/v1.0/emails/update" method="POST">
       <div class="form-group">
+      <label>Id</label>
+          <input type="hidden" name="id_old" value="{{id}}">
+          <input type="text" class="form-control" name="id_new" value="{{id}}">
+      </div>
+      <div class="form-group">
       <label>Title</label>
-          <input type="hidden" name="title_old" value="{{title}}">
-          <input type="text" class="form-control" name="title_new" value="{{title}}">
+          <input type="text" class="form-control" name="title" value="{{title}}">
       </div>
       <div class="form-group">
       <label>From Email address</label>

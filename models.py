@@ -10,8 +10,7 @@ class EmailData(db.Model):
     to_email = db.Column(db.String)
     email_message = db.Column(db.String)
 
-    def __init__(self, id, title, from_email, to_email, email_message):
-        self.id = id
+    def __init__(self, title, from_email, to_email, email_message):
         self.title = title
         self.from_email = from_email
         self.to_email = to_email
