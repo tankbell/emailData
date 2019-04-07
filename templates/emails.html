@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Email Data{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+    <p class="navbar-btn">
+        <a href="/create" class="btn btn-default">Create New Email</a>
+    </p>
+    <br></br>
+  <h4>Emails created</h4>
+  <table class="table table-striped">
+  <thead>
+  <tr>
+      <th>Title</th>
+      <th>From</th>
+      <th>To</th>
+      <th>Message</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for email in emails %}
+    <tr>
+        <td>{{ email.title }}</td>
+        <td>{{ email.from_email }}</td>
+        <td>{{ email.to_email }}</td>
+        <td>{{ email.email_message }}</td>
+        <td>
+            <form method="POST" action="/update_form" style="display: inline">
+                <input type="hidden" value="{{email.title}}" name="title">
+                <input type="hidden" value="{{email.from_email}}" name="from_email">
+                <input type="hidden" value="{{email.to_email}}" name="to_email">
+                <input type="hidden" value="{{email.email_message}}" name="email_message">
+                <input type="submit" value="Edit">
+            </form>
+        </td>
+        <td>
+            <form method="POST" action="/remove" style="display: inline">
+                <input type="hidden" value="{{email.title}}" name="title">
+                <input type="submit" value="Delete">
+            </form>
+        </td>
+    </tr>
+  {% endfor %}
+</table>
+{% endblock %}
