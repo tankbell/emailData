@@ -5,7 +5,7 @@
 {% endblock %}
 {% block content %}
     <p class="navbar-btn">
-        <a href="/create" class="btn btn-default">Create New Email</a>
+        <a href="/create_form" class="btn btn-default">Create New Email</a>
     </p>
     <br></br>
   <h4>Emails created</h4>
@@ -35,7 +35,7 @@
             </form>
         </td>
         <td>
-            <form method="POST" action="/remove" style="display: inline">
+            <form method="POST" action="/v1.0/emails/delete" style="display: inline">
                 <input type="hidden" value="{{email.title}}" name="title">
                 <input type="submit" value="Delete">
             </form>

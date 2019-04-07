@@ -10,15 +10,20 @@ db = SQLAlchemy(app)
 
 from models import EmailData
 
+# The landing page of the accompanying client web app
 @app.route('/')
 def home():
     emails = EmailData.query.all();
     return render_template('emails.html', emails=emails)
 
-@app.route('/create', methods=['GET'])
+# Form for letting users create an email
+# Used in the accompanying web app
+@app.route('/create_form', methods=['GET'])
 def create_email_display_form():
     return render_template('create.html')
 
+# Form for letting users update an email
+# Used in the accompanying web app
 @app.route('/update_form', methods=['POST'])
 def create_email_edit_form():
     title = request.form.get('title')
@@ -31,7 +36,9 @@ def create_email_edit_form():
                            to_email=to_email,
                            email_message=email_message)
 
-@app.route('/update', methods=['POST'])
+# POST method for updating an email record
+# Used in the accompanying web app
+@app.route('/v1.0/emails/update', methods=['POST'])
 def update_email():
     old_title = request.form.get('title_old')
     new_title = request.form.get('title_new')
@@ -46,7 +53,8 @@ def update_email():
     db.session.commit()
     return redirect("/")
 
-@app.route('/create', methods=['POST'])
+# POST method for creating an email record
+@app.route('/v1.0/emails', methods=['POST'])
 def create_email():
     title = request.form.get('title')
     from_email = request.form.get('from_email')
@@ -60,7 +68,9 @@ def create_email():
     emails = EmailData.query.all();
     return redirect("/")
 
-@app.route("/remove", methods=["POST"])
+# POST method for deleting an email record
+# Used in the accompanying web app
+@app.route("/v1.0/emails/delete", methods=['POST'])
 def delete():
     title = request.form.get("title")
     email = EmailData.query.filter_by(title=title).first()
