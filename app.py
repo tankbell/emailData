@@ -1,12 +1,23 @@
 
 import os
+import time
+import json
+import requests
+import sendgrid
+from collections import OrderedDict
 from flask import Flask, render_template, request, redirect
 from flask.ext.sqlalchemy import SQLAlchemy
+from rq import Queue
+from rq.job import Job
+from send_email_worker import conn
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import *
 
 app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS'])
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+q = Queue(connection=conn)
 
 from models import EmailData
 
@@ -65,12 +76,15 @@ def create_email():
     from_email = request.form.get('from_email')
     to_email = request.form.get('to_email')
     email_message = request.form.get('email_message')
+    email_sent = "False"
 
-    emailData = EmailData(title, from_email, to_email, email_message)
-    db.session.add(emailData)
-    db.session.commit()
-
-    emails = EmailData.query.all();
+    emailData = EmailData(title, from_email, to_email, email_message, email_sent)
+    # Future Work : Add proper error handling here.
+    try:
+        db.session.add(emailData)
+        db.session.commit()
+    except Exception as e:
+        print(e)
     return redirect("/")
 
 # POST method for deleting an email record
@@ -82,6 +96,64 @@ def delete():
     db.session.delete(email)
     db.session.commit()
     return redirect("/")
+
+# GET api for getting all the email data
+@app.route("/v1.0/emails", methods=['GET'])
+def get_emails():
+    emails = EmailData.query.all();
+    return to_array(emails)
+
+def to_array(all_emails):
+    e = [ em.asdict() for em in all_emails ]
+    return json.dumps(e) 
+
+def send_emails(email_key,id,title, from_email, to_email, email_message, email_sent):
+    sg = sendgrid.SendGridAPIClient(email_key)
+    data = {
+    "personalizations": [
+     {
+      "to": [
+        {
+          "email": to_email
+        }
+       ],
+      "subject": title
+     }
+    ],
+    "from": {
+      "email": from_email
+    },
+    "content": [
+     {
+      "type": "text/plain",
+      "value": email_message
+     }
+    ]
+    }
+    response = sg.client.mail.send.post(request_body=data)
+    rc = response.status_code
+    print(rc)
+    if (rc == 202):
+        email = EmailData.query.filter_by(id=id).first()
+        print (email.email_message)
+        print (email.email_sent)
+        email.email_sent = "True"
+        db.session.commit()
+
+
+
+@app.route('/v1.0/emails/publish')
+def publish_to_queue():
+    email_api_key = os.environ.get('SENDGRID_API_KEY')
+    emails = EmailData.query.all();
+    for email in emails:
+        if email.email_sent=="True":
+            continue
+        q.enqueue_call(func=send_emails,
+            args=(email_api_key,email.id,email.title, email.from_email, email.to_email, email.email_message, email.email_sent),
+            result_ttl=5000)
+    return redirect("/")
+
 
 if __name__ == '__main__':
     app.run()
