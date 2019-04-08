@@ -173,6 +173,7 @@ def to_array(all_emails):
     e = [ em.asdict() for em in all_emails ]
     return json.dumps(e) 
 
+# Job for the worker process. Enqueued in the redis queue.
 def send_emails(email_key,id,title, from_email, to_email, email_message, email_sent):
     sg = sendgrid.SendGridAPIClient(email_key)
     data = {
