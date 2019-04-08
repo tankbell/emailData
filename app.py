@@ -2,7 +2,6 @@
 import os
 import time
 import json
-import requests
 import sendgrid
 from collections import OrderedDict
 from flask import Flask, render_template, request, redirect
