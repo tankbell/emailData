@@ -4,7 +4,7 @@ import time
 import json
 import sendgrid
 from collections import OrderedDict
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, abort, jsonify
 from flask.ext.sqlalchemy import SQLAlchemy
 from rq import Queue
 from rq.job import Job
@@ -68,7 +68,8 @@ def update_email():
     db.session.commit()
     return redirect("/")
 
-# POST method for creating an email record
+# POST method for creating an email record from
+# a HTML form
 @app.route('/v1.0/emails', methods=['POST'])
 def create_email():
     title = request.form.get('title')
@@ -96,11 +97,77 @@ def delete():
     db.session.commit()
     return redirect("/")
 
-# GET api for getting all the email data
-@app.route("/v1.0/emails", methods=['GET'])
+# CREATE(POST) api for creating email data
+@app.route("/api/v1.0/emails", methods=['POST'])
+def create_email_json():
+    title = request.json.get('title')
+    from_email = request.json.get('from_email')
+    to_email = request.json.get('to_email')
+    email_message = request.json.get('email_message')
+    email_sent = "False"
+
+    emailData = EmailData(title, from_email, to_email, email_message, email_sent)
+    try:
+        db.session.add(emailData)
+        db.session.commit()
+    except Exception as e:
+        return abort(400)
+    emails = EmailData.query.all();
+    return to_array(emails)
+
+# READ(GET) api for getting all the email data
+@app.route("/api/v1.0/emails", methods=['GET'])
 def get_emails():
     emails = EmailData.query.all();
     return to_array(emails)
+
+# READ(GET) api for getting specific email by its id
+@app.route("/api/v1.0/emails/<int:email_id>", methods=['GET'])
+def get_email_id(email_id):
+    e = EmailData.query.filter_by(id=email_id).first()
+    if e:
+        return json.dumps(e.asdict())
+    else:
+        return abort(404)
+
+# UPDATE(PUT) api for updating email data given an id
+@app.route("/api/v1.0/emails/<int:email_id>", methods=['PUT'])
+def update_email_json(email_id):
+    title = request.json.get('title')
+    from_email = request.json.get('from_email')
+    to_email = request.json.get('to_email')
+    email_message = request.json.get('email_message')
+    email = EmailData.query.filter_by(id=email_id).first()
+    email.title = title
+    email.from_email = from_email
+    email.to_email = to_email
+    email.email_message = email_message
+    try:
+        db.session.commit()
+    except Exception as e:
+        return abort(400)
+    emails = EmailData.query.all();
+    return to_array(emails)
+
+# DELETE api for deleting all the email data
+@app.route("/api/v1.0/emails", methods=['DELETE'])
+def delete_all():
+    db.session.query(EmailData).delete()
+    db.session.commit()
+    emails = EmailData.query.all();
+    return to_array(emails)
+
+# DELETE api for deleting a specific email by its id
+@app.route("/api/v1.0/emails/<int:email_id>", methods=['DELETE'])
+def delete_id(email_id):
+    e = db.session.query(EmailData).filter(EmailData.id==email_id).first()
+    if e:
+        db.session.delete(e)
+        db.session.commit()
+        emails = EmailData.query.all();
+        return to_array(emails)
+    else:
+        return abort(404)
 
 def to_array(all_emails):
     e = [ em.asdict() for em in all_emails ]
@@ -134,8 +201,6 @@ def send_emails(email_key,id,title, from_email, to_email, email_message, email_s
     print(rc)
     if (rc == 202):
         email = EmailData.query.filter_by(id=id).first()
-        print (email.email_message)
-        print (email.email_sent)
         email.email_sent = "True"
         db.session.commit()
 
