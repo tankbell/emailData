@@ -123,6 +123,5 @@ Via: 1.1 vegur
 1. Detailed error handling [pretty messages , returning detailed error codes etc]
 2. Dockerize
 3. Scaling [both for REST apis and the send email messaging queue and worker process]
-4. A more rigorous test plan and edge cases testing.
 
 
